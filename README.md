@@ -29,7 +29,7 @@ cd lyrics_app
 flutter pub get
 
 # Run the app (replace with your desired platform)
-flutter run
+flutter run -d chrome
 ```
 
 ## 📁 Project Structure
