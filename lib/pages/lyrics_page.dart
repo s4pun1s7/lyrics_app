@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../style.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 class LyricsPage extends StatefulWidget {
@@ -11,6 +10,12 @@ class LyricsPage extends StatefulWidget {
   final VoidCallback onSave;
   final VoidCallback onUnsave;
   final bool isSaved;
+  final String fontFamily;
+  final double fontSize;
+  final double lineHeight;
+  final TextAlign textAlign;
+  final String? sourceUrl;
+  final String? spotifyUrl;
 
   const LyricsPage({
     Key? key,
@@ -21,6 +26,12 @@ class LyricsPage extends StatefulWidget {
     required this.onSave,
     required this.onUnsave,
     required this.isSaved,
+    required this.fontFamily,
+    required this.fontSize,
+    required this.lineHeight,
+    this.textAlign = TextAlign.left,
+    this.sourceUrl,
+    this.spotifyUrl,
   }) : super(key: key);
 
   @override
@@ -28,11 +39,6 @@ class LyricsPage extends StatefulWidget {
 }
 
 class _LyricsPageState extends State<LyricsPage> {
-  double _fontSize = 16;
-  String _fontFamily = 'monospace';
-  Color _textColor = Colors.black;
-  Color _bgColor = Colors.white;
-
   final ScrollController _scrollController = ScrollController();
   bool _isAutoScrolling = false;
   double _scrollSpeed = 30; // pixels per second
@@ -41,7 +47,6 @@ class _LyricsPageState extends State<LyricsPage> {
   @override
   void initState() {
     super.initState();
-    _loadPrefs();
   }
 
   @override
@@ -54,156 +59,9 @@ class _LyricsPageState extends State<LyricsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     setState(() {
-      if (_textColor == Colors.black || _textColor == Colors.white) {
-        _textColor = isDark ? Colors.white : Colors.black;
-      }
-      if (_bgColor == Colors.white || _bgColor == Colors.black) {
-        _bgColor = isDark ? Colors.black : Colors.white;
-      }
+      // Removed color settings
     });
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _fontSize = prefs.getDouble('lyrics_font_size') ?? 16;
-      _fontFamily = prefs.getString('lyrics_font_family') ?? 'monospace';
-      _textColor = Color(
-        prefs.getInt('lyrics_text_color') ?? Colors.black.value,
-      );
-      _bgColor = Color(prefs.getInt('lyrics_bg_color') ?? Colors.white.value);
-    });
-  }
-
-  Future<void> _savePrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('lyrics_font_size', _fontSize);
-    await prefs.setString('lyrics_font_family', _fontFamily);
-    await prefs.setInt('lyrics_text_color', _textColor.value);
-    await prefs.setInt('lyrics_bg_color', _bgColor.value);
-  }
-
-  void _resetToDefaultStyle() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    setState(() {
-      _fontSize = 16;
-      _fontFamily = 'monospace';
-      _textColor = isDark ? Colors.white : Colors.black;
-      _bgColor = isDark ? Colors.black : Colors.white;
-    });
-    _savePrefs();
-  }
-
-  void _showCustomizeSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Font Size'),
-                      Slider(
-                        value: _fontSize,
-                        min: 12,
-                        max: 32,
-                        divisions: 10,
-                        label: _fontSize.round().toString(),
-                        onChanged: (v) {
-                          setModalState(() => _fontSize = v);
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Font Family'),
-                      DropdownButton<String>(
-                        value: _fontFamily,
-                        items: [
-                          DropdownMenuItem(
-                            value: 'monospace',
-                            child: Text('Monospace'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'serif',
-                            child: Text('Serif'),
-                          ),
-                          DropdownMenuItem(value: 'sans', child: Text('Sans')),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setModalState(() => _fontFamily = v);
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Text Color'),
-                      GestureDetector(
-                        onTap: () async {
-                          Color? picked = await showDialog(
-                            context: context,
-                            builder: (context) =>
-                                _ColorPickerDialog(_textColor),
-                          );
-                          if (picked != null)
-                            setModalState(() => _textColor = picked);
-                        },
-                        child: CircleAvatar(backgroundColor: _textColor),
-                      ),
-                      Text('Background'),
-                      GestureDetector(
-                        onTap: () async {
-                          Color? picked = await showDialog(
-                            context: context,
-                            builder: (context) => _ColorPickerDialog(_bgColor),
-                          );
-                          if (picked != null)
-                            setModalState(() => _bgColor = picked);
-                        },
-                        child: CircleAvatar(backgroundColor: _bgColor),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {});
-                          _savePrefs();
-                          Navigator.pop(context);
-                        },
-                        child: Text('Apply'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () {
-                          _resetToDefaultStyle();
-                          Navigator.pop(context);
-                        },
-                        child: Text('Reset to Default'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   void _startAutoScroll() {
@@ -263,204 +121,153 @@ class _LyricsPageState extends State<LyricsPage> {
     );
   }
 
-  bool get _isCurrentLyricsSaved {
-    // This assumes you pass a list of saved songs and current artist/song to this widget or via a callback
-    // For now, let's use an InheritedWidget or a callback, but here's a placeholder:
-    // Replace with actual logic as needed
-    if (widget.lyrics.isEmpty || widget.artist.isEmpty || widget.song.isEmpty)
-      return false;
-    // You may want to pass a Set<String> of saved keys for efficiency
-    // For now, just return false (or true if you have access to saved songs)
-    // TODO: Replace with actual logic to check if the current lyrics are saved.
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: _bgColor,
-      child: Padding(
-        padding: kPagePadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (widget.albumArtUrl != null)
-              SizedBox(
-                width: kAlbumArtSize,
-                height: kAlbumArtSize,
-                child: Image.network(
-                  widget.albumArtUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.music_note, size: 60),
-                ),
-              ),
-            SizedBox(height: 16),
-            Text(
-              '${widget.artist} - ${widget.song}',
-              style: kTitleStyle,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Padding(
+      padding: kPagePadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ElevatedButton(
-                  onPressed: widget.isSaved ? widget.onUnsave : widget.onSave,
-                  child: Text(widget.isSaved ? 'Unsave' : 'Save'),
-                  style: kButtonStyle,
-                ),
-                SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: _showCustomizeSheet,
-                  child: Icon(Icons.settings),
-                ),
-                SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: _isAutoScrolling
-                      ? _stopAutoScroll
-                      : _startAutoScroll,
-                  child: Icon(
-                    _isAutoScrolling ? Icons.pause : Icons.play_arrow,
+                // Left: Lyrics (centered)
+                Expanded(
+                  flex: 2,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: SelectableText(
+                      widget.lyrics,
+                      style: TextStyle(
+                        fontSize: widget.fontSize,
+                        fontFamily: widget.fontFamily,
+                        height: widget.lineHeight,
+                      ),
+                      textAlign: widget.textAlign,
+                    ),
                   ),
                 ),
-                SizedBox(width: 8),
-                OutlinedButton(
-                  onPressed: _showScrollSettings,
-                  child: Icon(Icons.speed),
+                SizedBox(width: 32),
+                // Right: Metadata and controls
+                SizedBox(
+                  width: 260,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (widget.albumArtUrl != null)
+                        SizedBox(
+                          width: kAlbumArtSize,
+                          height: kAlbumArtSize,
+                          child: Image.network(
+                            widget.albumArtUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.music_note, size: 60),
+                          ),
+                        ),
+                      SizedBox(height: 16),
+                      Text(
+                        '${widget.artist} - ${widget.song}',
+                        style: kTitleStyle,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8),
+                      if (widget.sourceUrl != null || widget.spotifyUrl != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (widget.sourceUrl != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4.0),
+                                child: InkWell(
+                                  onTap: () => _launchUrl(context, widget.sourceUrl!),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.link, size: 18, color: Theme.of(context).colorScheme.primary),
+                                      SizedBox(width: 4),
+                                      Text('View on iTunes', style: TextStyle(color: Theme.of(context).colorScheme.primary, decoration: TextDecoration.underline)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            if (widget.spotifyUrl != null)
+                              InkWell(
+                                onTap: () => _launchUrl(context, widget.spotifyUrl!),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.music_note, size: 18, color: Colors.green),
+                                    SizedBox(width: 4),
+                                    Text('View on Spotify', style: TextStyle(color: Colors.green, decoration: TextDecoration.underline)),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: widget.isSaved
+                                ? widget.onUnsave
+                                : widget.onSave,
+                            child: Text(widget.isSaved ? 'Unsave' : 'Save'),
+                            style: kButtonStyle,
+                          ),
+                          SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: _isAutoScrolling
+                                ? _stopAutoScroll
+                                : _startAutoScroll,
+                            child: Icon(
+                              _isAutoScrolling ? Icons.pause : Icons.play_arrow,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: _showScrollSettings,
+                            child: Icon(Icons.speed),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _formatLyricsSections(widget.lyrics),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _formatLyricsSections(String lyrics) {
-    final lines = lyrics.trim().split('\n');
-    final widgets = <Widget>[];
-    bool lastWasBlank = false;
-    final sectionRegex = RegExp(
-      r'\[(chorus|verse|bridge|intro|outro|hook|pre-chorus|refrain)[^\]]*\]',
-      caseSensitive: false,
-    );
-
-    for (final line in lines) {
-      final trimmed = line.trim();
-      final isBlank = trimmed.isEmpty;
-      if (isBlank) {
-        if (!lastWasBlank) widgets.add(SizedBox(height: 12));
-        lastWasBlank = true;
-        continue;
-      }
-      lastWasBlank = false;
-      if (sectionRegex.hasMatch(trimmed)) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 4),
-            child: Text(
-              trimmed,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 1.1 * 16, // Slightly larger
-                color: Colors.blueAccent,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        );
-      } else {
-        widgets.add(
-          SelectableText(
-            line,
-            style: TextStyle(
-              fontSize: _fontSize,
-              fontFamily: _fontFamily == 'monospace'
-                  ? 'monospace'
-                  : _fontFamily == 'serif'
-                  ? 'serif'
-                  : null,
-              color: _textColor,
-            ),
-            textAlign: TextAlign.left,
-          ),
-        );
-      }
-    }
-    return widgets;
-  }
-}
-
-class _ColorPickerDialog extends StatefulWidget {
-  final Color initialColor;
-  const _ColorPickerDialog(this.initialColor);
-  @override
-  State<_ColorPickerDialog> createState() => _ColorPickerDialogState();
-}
-
-class _ColorPickerDialogState extends State<_ColorPickerDialog> {
-  double _r = 0, _g = 0, _b = 0;
-  @override
-  void initState() {
-    super.initState();
-    _r = widget.initialColor.red.toDouble();
-    _g = widget.initialColor.green.toDouble();
-    _b = widget.initialColor.blue.toDouble();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Pick Color'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Slider(
-            value: _r,
-            min: 0,
-            max: 255,
-            label: 'R: ${_r.round()}',
-            activeColor: Colors.red,
-            onChanged: (v) => setState(() => _r = v),
-          ),
-          Slider(
-            value: _g,
-            min: 0,
-            max: 255,
-            label: 'G: ${_g.round()}',
-            activeColor: Colors.green,
-            onChanged: (v) => setState(() => _g = v),
-          ),
-          Slider(
-            value: _b,
-            min: 0,
-            max: 255,
-            label: 'B: ${_b.round()}',
-            activeColor: Colors.blue,
-            onChanged: (v) => setState(() => _b = v),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(
-            context,
-            Color.fromARGB(255, _r.round(), _g.round(), _b.round()),
+    );
+  }
+
+  void _launchUrl(BuildContext context, String url) async {
+    // Use url_launcher or show a dialog with the link (for web compatibility)
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Open Link'),
+        content: Text('Open this link in your browser?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
           ),
-          child: Text('Select'),
-        ),
-      ],
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // For web, just use launchUrlString if available, else copy to clipboard
+              // For now, use canLaunchUrlString and launchUrlString if url_launcher is added
+            },
+            child: Text('Open'),
+          ),
+        ],
+      ),
     );
   }
 }

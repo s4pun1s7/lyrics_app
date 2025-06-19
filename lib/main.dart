@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-//import 'package:http/http.dart' as http;
-//import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'style.dart';
 import 'pages/search_page.dart';
 import 'pages/lyrics_page.dart';
 import 'pages/saved_page.dart';
+import 'pages/settings_page.dart';
 import 'api/suggestions_api.dart';
 import 'api/album_art_api.dart';
-import 'api/lyrics_api.dart';
+import 'api/lyrics_api.dart'; // Make sure fetchLyrics is exported from this file.
 import 'models/saved_song.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,6 +56,7 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
   String _song = '';
   String _lyrics = '';
   String? _albumArtUrl;
+  AlbumArtResult? _albumArtResult;
   List<String> _artistSuggestions = [];
   List<String> _songSuggestions = [];
   final PageController _pageController = PageController();
@@ -65,7 +67,13 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
   Timer? _songDebounce;
   int _selectedIndex = 0;
   List<String> _searchHistory = [];
-  SavedSong? _selectedSavedSong;
+  String _fontFamily = 'monospace';
+  double _fontSize = 16.0;
+  double _lineHeight = 1.2;
+  List<Map<String, String>> _recentLyrics = [];
+  TextAlign _textAlign = TextAlign.left;
+  List<Map<String, String>> _artistSongResults = [];
+  bool _showArtistSongDropdown = false;
 
   @override
   void initState() {
@@ -114,12 +122,36 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
   }
 
   Future<void> _onSearch() async {
+    // If only artist is present, show 10-15 songs by that artist
+    if (_artist.isNotEmpty && _song.isEmpty) {
+      return;
+    }
+    // If only song is present, show matching artists with that song title
+    if (_song.isNotEmpty && _artist.isEmpty) {
+      return;
+    }
+    // Normal search
     try {
       final lyrics = await fetchLyrics(_artist, _song);
-      final artUrl = await fetchAlbumArt(_artist, _song);
+      final artResult = await fetchAlbumArt(_artist, _song);
       setState(() {
-        _lyrics = lyrics;
-        _albumArtUrl = artUrl;
+        _lyrics = lyrics ?? '';
+        _albumArtResult = artResult;
+        _albumArtUrl = artResult?.artworkUrl;
+        if (_artist.isNotEmpty && _song.isNotEmpty && _lyrics.isNotEmpty) {
+          _recentLyrics.removeWhere(
+            (item) => item['artist'] == _artist && item['song'] == _song,
+          );
+          _recentLyrics.insert(0, {
+            'artist': _artist,
+            'song': _song,
+            'lyrics': _lyrics,
+            'albumArtUrl': _albumArtUrl ?? '',
+          });
+          if (_recentLyrics.length > 5) {
+            _recentLyrics = _recentLyrics.sublist(0, 5);
+          }
+        }
       });
       _addToSearchHistory(_artist, _song);
       _saveSongs();
@@ -137,6 +169,44 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
         ),
       );
     }
+  }
+
+  Future<List<Map<String, String>>> fetchSongsByArtist(
+    String artist, {
+    int limit = 15,
+  }) async {
+    final url = Uri.parse(
+      'https://itunes.apple.com/search?term=${Uri.encodeComponent(artist)}&entity=song&limit=$limit',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, String>>.from(
+        (data['results'] as List).map(
+          (item) => {'artist': item['artistName'], 'song': item['trackName']},
+        ),
+      );
+    }
+    return [];
+  }
+
+  Future<List<Map<String, String>>> fetchArtistsBySong(
+    String song, {
+    int limit = 15,
+  }) async {
+    final url = Uri.parse(
+      'https://itunes.apple.com/search?term=${Uri.encodeComponent(song)}&entity=song&limit=$limit',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, String>>.from(
+        (data['results'] as List).map(
+          (item) => {'artist': item['artistName'], 'song': item['trackName']},
+        ),
+      );
+    }
+    return [];
   }
 
   void _onSave() {
@@ -211,6 +281,23 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     super.dispose();
   }
 
+  void _updateArtistSongResults() async {
+    if (_artist.isNotEmpty && _song.isNotEmpty) {
+      final results = await fetchArtistsBySong(_song);
+      setState(() {
+        _artistSongResults = results
+            .where((item) => item['artist']!.toLowerCase().contains(_artist.toLowerCase()) || item['song']!.toLowerCase().contains(_song.toLowerCase()))
+            .toList();
+        _showArtistSongDropdown = _artistSongResults.isNotEmpty;
+      });
+    } else {
+      setState(() {
+        _artistSongResults = [];
+        _showArtistSongDropdown = false;
+      });
+    }
+  }
+
   void _onArtistChanged(String val) {
     _artist = val.trim();
     if (_artistDebounce?.isActive ?? false) _artistDebounce!.cancel();
@@ -220,6 +307,7 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
         setState(() {
           _artistSuggestions = suggestions;
         });
+        _updateArtistSongResults();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch artist suggestions.')),
@@ -252,16 +340,18 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     if (_songDebounce?.isActive ?? false) _songDebounce!.cancel();
     _songDebounce = Timer(const Duration(milliseconds: 400), () async {
       try {
-        // If artist is set, include it in the query for more relevant suggestions
         final query = _artist.isNotEmpty ? '$_artist $_song' : _song;
         final suggestions = await fetchSuggestions(query, 'song');
         setState(() {
           _songSuggestions = suggestions;
         });
+        _updateArtistSongResults();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch song suggestions.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to fetch song suggestions.')),
+          );
+        }
       }
     });
   }
@@ -274,7 +364,71 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     });
   }
 
+  void _onArtistSongDropdownSelect(Map<String, String> result) {
+    setState(() {
+      _artist = result['artist'] ?? '';
+      _song = result['song'] ?? '';
+      _artistController.text = _artist;
+      _songController.text = _song;
+      _showArtistSongDropdown = false;
+      _artistSongResults = [];
+    });
+    _onSearch();
+  }
+
   void _onMenuTap(int index) {
+    if (index == 1 && (_artist.isEmpty || _song.isEmpty)) {
+      // Show recent lyrics if lyrics page is tapped without a search
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Recent Lyrics'),
+            content: _recentLyrics.isEmpty
+                ? Text('No recent lyrics viewed.')
+                : SizedBox(
+                    width: 350,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _recentLyrics.length,
+                      itemBuilder: (context, i) {
+                        final item = _recentLyrics[i];
+                        return ListTile(
+                          title: Text('${item['artist']} - ${item['song']}'),
+                          subtitle: Text(
+                            item['lyrics'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _artist = item['artist'] ?? '';
+                              _song = item['song'] ?? '';
+                              _lyrics = item['lyrics'] ?? '';
+                              _albumArtUrl = item['albumArtUrl'];
+                            });
+                            Navigator.of(context).pop();
+                            _pageController.animateToPage(
+                              1,
+                              duration: Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -285,21 +439,38 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     );
   }
 
-  void _onSelectSavedSong(SavedSong song) {
+  void _onDeleteSong(SavedSong song) {
     setState(() {
-      _selectedSavedSong = song;
-      _artist = song.artist;
-      _song = song.song;
-      _lyrics = song.lyrics;
-      _albumArtUrl = song.albumArtUrl;
-      _artistController.text = song.artist;
-      _songController.text = song.song;
+      _savedSongs.remove(song);
     });
-    _pageController.animateToPage(
-      1,
-      duration: Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-    );
+    _saveSongs();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Deleted saved song.')));
+  }
+
+  void _onFontFamilyChanged(String family) {
+    setState(() {
+      _fontFamily = family;
+    });
+  }
+
+  void _onFontSizeChanged(double size) {
+    setState(() {
+      _fontSize = size;
+    });
+  }
+
+  void _onLineHeightChanged(double height) {
+    setState(() {
+      _lineHeight = height;
+    });
+  }
+
+  void _onTextAlignChanged(TextAlign align) {
+    setState(() {
+      _textAlign = align;
+    });
   }
 
   @override
@@ -340,6 +511,11 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
                   selected: _selectedIndex == 2,
                   onTap: () => _onMenuTap(2),
                 ),
+                _MenuButton(
+                  label: 'Settings',
+                  selected: _selectedIndex == 3,
+                  onTap: () => _onMenuTap(3),
+                ),
               ],
             ),
           ),
@@ -372,6 +548,9 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
                       onGoToSaves: _goToSaves,
                       artistController: _artistController,
                       songController: _songController,
+                      artistSongResults: _artistSongResults,
+                      showArtistSongDropdown: _showArtistSongDropdown,
+                      onArtistSongDropdownSelect: _onArtistSongDropdownSelect,
                     ),
                     LyricsPage(
                       artist: _artist,
@@ -381,11 +560,29 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
                       onSave: _onSave,
                       onUnsave: _onUnsave,
                       isSaved: _isCurrentLyricsSaved,
+                      fontFamily: _fontFamily,
+                      fontSize: _fontSize,
+                      lineHeight: _lineHeight,
+                      textAlign: _textAlign,
+                      sourceUrl: _albumArtResult?.trackViewUrl,
+                      spotifyUrl: _albumArtResult?.spotifyUrl,
                     ),
                     SavedPage(
                       savedSongs: _savedSongs,
-                      onSelectSong: _onSelectSavedSong,
                       onBackToSearch: _goToSearch,
+                      onDeleteSong: _onDeleteSong,
+                    ),
+                    SettingsPage(
+                      isDarkMode: widget.isDarkMode,
+                      onThemeChanged: widget.toggleTheme,
+                      fontFamily: _fontFamily,
+                      fontSize: _fontSize,
+                      lineHeight: _lineHeight,
+                      onFontFamilyChanged: _onFontFamilyChanged,
+                      onFontSizeChanged: _onFontSizeChanged,
+                      onLineHeightChanged: _onLineHeightChanged,
+                      textAlign: _textAlign,
+                      onTextAlignChanged: _onTextAlignChanged,
                     ),
                   ],
                 ),

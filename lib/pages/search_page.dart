@@ -17,8 +17,13 @@ class SearchPage extends StatelessWidget {
   final TextEditingController artistController;
   final TextEditingController songController;
 
+  // If you want to support artist-song dropdowns, add these parameters:
+  final List<Map<String, String>> artistSongResults;
+  final bool showArtistSongDropdown;
+  final ValueChanged<Map<String, String>> onArtistSongDropdownSelect;
+
   const SearchPage({
-    Key? key,
+    super.key,
     required this.isDarkMode,
     required this.toggleTheme,
     required this.artist,
@@ -33,7 +38,10 @@ class SearchPage extends StatelessWidget {
     required this.onGoToSaves,
     required this.artistController,
     required this.songController,
-  }) : super(key: key);
+    this.artistSongResults = const [],
+    this.showArtistSongDropdown = false,
+    required this.onArtistSongDropdownSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +57,22 @@ class SearchPage extends StatelessWidget {
             controller: artistController,
           ),
           if (artistSuggestions.isNotEmpty)
-            ...artistSuggestions.map(
-              (suggestion) => ListTile(
-                title: Text(suggestion, style: kSuggestionStyle),
-                onTap: () => onArtistSuggestionTap(suggestion),
+            Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 200),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: artistSuggestions
+                      .map(
+                        (suggestion) => ListTile(
+                          title: Text(suggestion, style: kSuggestionStyle),
+                          onTap: () => onArtistSuggestionTap(suggestion),
+                        ),
+                      )
+                      .toList(),
+                ),
               ),
             ),
           TextField(
@@ -62,10 +82,40 @@ class SearchPage extends StatelessWidget {
             controller: songController,
           ),
           if (songSuggestions.isNotEmpty)
-            ...songSuggestions.map(
-              (suggestion) => ListTile(
-                title: Text(suggestion, style: kSuggestionStyle),
-                onTap: () => onSongSuggestionTap(suggestion),
+            Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 200),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: songSuggestions
+                      .map(
+                        (suggestion) => ListTile(
+                          title: Text(suggestion, style: kSuggestionStyle),
+                          onTap: () => onSongSuggestionTap(suggestion),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
+          // If you want to show the artist-song dropdown:
+          if (showArtistSongDropdown && artistSongResults.isNotEmpty)
+            Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 200),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: artistSongResults.map(
+                    (result) => ListTile(
+                      title: Text('${result['artist']} - ${result['song']}', style: kSuggestionStyle),
+                      onTap: () => onArtistSongDropdownSelect(result),
+                    ),
+                  ).toList(),
+                ),
               ),
             ),
           SizedBox(height: 16),
@@ -73,15 +123,15 @@ class SearchPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                style: kButtonStyle,
                 onPressed: onSearch,
                 child: Text('Search Lyrics'),
-                style: kButtonStyle,
               ),
               SizedBox(width: 16),
               ElevatedButton(
+                style: kButtonStyle,
                 onPressed: onGoToSaves,
                 child: Text('Saved'),
-                style: kButtonStyle,
               ),
             ],
           ),
