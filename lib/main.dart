@@ -165,23 +165,25 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
   }
 
   bool get _isCurrentLyricsSaved {
-    return _savedSongs.any((s) =>
-      s.artist.toLowerCase() == _artist.toLowerCase() &&
-      s.song.toLowerCase() == _song.toLowerCase()
+    return _savedSongs.any(
+      (s) =>
+          s.artist.toLowerCase() == _artist.toLowerCase() &&
+          s.song.toLowerCase() == _song.toLowerCase(),
     );
   }
 
   void _onUnsave() {
     setState(() {
-      _savedSongs.removeWhere((s) =>
-        s.artist.toLowerCase() == _artist.toLowerCase() &&
-        s.song.toLowerCase() == _song.toLowerCase()
+      _savedSongs.removeWhere(
+        (s) =>
+            s.artist.toLowerCase() == _artist.toLowerCase() &&
+            s.song.toLowerCase() == _song.toLowerCase(),
       );
     });
     _saveSongs();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Removed from saved!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Removed from saved!')));
   }
 
   void _goToSaves() {
