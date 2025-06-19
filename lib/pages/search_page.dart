@@ -42,12 +42,6 @@ class SearchPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text('Dark Mode', style: kSuggestionStyle),
-              Switch(value: isDarkMode, onChanged: toggleTheme),
-            ],
-          ),
           TextField(
             decoration: InputDecoration(labelText: 'Artist'),
             style: kSuggestionStyle,

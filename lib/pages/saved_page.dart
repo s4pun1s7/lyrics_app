@@ -5,11 +5,13 @@ import '../models/saved_song.dart';
 class SavedPage extends StatelessWidget {
   final List<SavedSong> savedSongs;
   final VoidCallback onBackToSearch;
+  final void Function(SavedSong) onSelectSong;
 
   const SavedPage({
     Key? key,
     required this.savedSongs,
     required this.onBackToSearch,
+    required this.onSelectSong,
   }) : super(key: key);
 
   @override
@@ -23,7 +25,9 @@ class SavedPage extends StatelessWidget {
           SizedBox(height: 16),
           Expanded(
             child: savedSongs.isEmpty
-                ? Center(child: Text('No saved songs yet.', style: kSuggestionStyle))
+                ? Center(
+                    child: Text('No saved songs yet.', style: kSuggestionStyle),
+                  )
                 : ListView.builder(
                     itemCount: savedSongs.length,
                     itemBuilder: (context, index) {
@@ -31,6 +35,7 @@ class SavedPage extends StatelessWidget {
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
+                          onTap: () => onSelectSong(song),
                           leading: song.albumArtUrl != null
                               ? Image.network(
                                   song.albumArtUrl!,
@@ -41,7 +46,10 @@ class SavedPage extends StatelessWidget {
                                       Icon(Icons.music_note),
                                 )
                               : Icon(Icons.music_note),
-                          title: Text('${song.artist} - ${song.song}', style: kSuggestionStyle),
+                          title: Text(
+                            '${song.artist} - ${song.song}',
+                            style: kSuggestionStyle,
+                          ),
                           subtitle: Text(
                             song.lyrics,
                             maxLines: 2,
