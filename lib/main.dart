@@ -16,11 +16,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() => runApp(LyricsApp());
 
 class LyricsApp extends StatefulWidget {
+  const LyricsApp({super.key});
   @override
-  _LyricsAppState createState() => _LyricsAppState();
+  LyricsAppState createState() => LyricsAppState();
 }
 
-class _LyricsAppState extends State<LyricsApp> {
+class LyricsAppState extends State<LyricsApp> {
   bool _isDarkMode = true;
 
   void _toggleTheme(bool value) {
@@ -45,13 +46,13 @@ class LyricsHomePage extends StatefulWidget {
   final bool isDarkMode;
   final ValueChanged<bool> toggleTheme;
 
-  LyricsHomePage({required this.isDarkMode, required this.toggleTheme});
+  const LyricsHomePage({super.key, required this.isDarkMode, required this.toggleTheme});
 
   @override
-  _LyricsHomePageState createState() => _LyricsHomePageState();
+  LyricsHomePageState createState() => LyricsHomePageState();
 }
 
-class _LyricsHomePageState extends State<LyricsHomePage> {
+class LyricsHomePageState extends State<LyricsHomePage> {
   String _artist = '';
   String _song = '';
   String _lyrics = '';
@@ -134,6 +135,7 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     try {
       final lyrics = await fetchLyrics(_artist, _song);
       final artResult = await fetchAlbumArt(_artist, _song);
+      if (!mounted) return;
       setState(() {
         _lyrics = lyrics ?? '';
         _albumArtResult = artResult;
@@ -161,6 +163,7 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
         curve: Curves.easeInOut,
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -310,11 +313,13 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     _artistDebounce = Timer(const Duration(milliseconds: 400), () async {
       try {
         final suggestions = await fetchSuggestions(_artist, 'musicArtist');
+        if (!mounted) return;
         setState(() {
           _artistSuggestions = suggestions;
         });
         _updateArtistSongResults();
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch artist suggestions.')),
         );
@@ -331,10 +336,12 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
     // Fetch song suggestions for the selected artist
     try {
       final suggestions = await fetchSuggestions(_artist, 'song');
+      if (!mounted) return;
       setState(() {
         _songSuggestions = suggestions;
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to fetch song suggestions for artist.')),
       );
@@ -348,16 +355,16 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
       try {
         final query = _artist.isNotEmpty ? '$_artist $_song' : _song;
         final suggestions = await fetchSuggestions(query, 'song');
+        if (!mounted) return;
         setState(() {
           _songSuggestions = suggestions;
         });
         _updateArtistSongResults();
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to fetch song suggestions.')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch song suggestions.')),
+        );
       }
     });
   }
@@ -498,7 +505,7 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
         children: [
           // Menu bar above the search area
           Container(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.secondary.withAlpha((0.1 * 255).toInt()),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

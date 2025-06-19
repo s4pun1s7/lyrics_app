@@ -18,7 +18,7 @@ class LyricsPage extends StatefulWidget {
   final String? spotifyUrl;
 
   const LyricsPage({
-    Key? key,
+    super.key,
     required this.artist,
     required this.song,
     required this.lyrics,
@@ -32,7 +32,7 @@ class LyricsPage extends StatefulWidget {
     this.textAlign = TextAlign.left,
     this.sourceUrl,
     this.spotifyUrl,
-  }) : super(key: key);
+  });
 
   @override
   State<LyricsPage> createState() => _LyricsPageState();
@@ -242,14 +242,15 @@ class _LyricsPageState extends State<LyricsPage> {
                             onPressed: widget.isSaved
                                 ? widget.onUnsave
                                 : widget.onSave,
-                            child: Text(widget.isSaved ? 'Unsave' : 'Save'),
                             style: kButtonStyle,
+                            child: Text(widget.isSaved ? 'Unsave' : 'Save'),
                           ),
                           SizedBox(width: 8),
                           OutlinedButton(
                             onPressed: _isAutoScrolling
                                 ? _stopAutoScroll
                                 : _startAutoScroll,
+                            style: null,
                             child: Icon(
                               _isAutoScrolling ? Icons.pause : Icons.play_arrow,
                             ),
@@ -257,6 +258,7 @@ class _LyricsPageState extends State<LyricsPage> {
                           SizedBox(width: 8),
                           OutlinedButton(
                             onPressed: _showScrollSettings,
+                            style: null,
                             child: Icon(Icons.speed),
                           ),
                         ],

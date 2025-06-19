@@ -59,17 +59,6 @@ class SavedPage extends StatelessWidget {
                             );
                           },
                           child: ListTile(
-                            leading: song.albumArtUrl != null
-                                ? Image.network(
-                                    song.albumArtUrl!,
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Icon(Icons.music_note),
-                                  )
-                                : Icon(Icons.music_note),
                             title: Text(
                               '${song.artist} - ${song.song}',
                               style: kSuggestionStyle,
@@ -80,6 +69,16 @@ class SavedPage extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: kLyricsStyle,
                             ),
+                            leading: song.albumArtUrl != null
+                                ? Image.network(
+                                    song.albumArtUrl!,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Icon(Icons.music_note),
+                                  )
+                                : Icon(Icons.music_note),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
