@@ -9,14 +9,9 @@ const TextStyle kTitleStyle = TextStyle(
   fontWeight: FontWeight.bold,
 );
 
-const TextStyle kSuggestionStyle = TextStyle(
-  fontSize: 16,
-);
+const TextStyle kSuggestionStyle = TextStyle(fontSize: 16);
 
-const TextStyle kLyricsStyle = TextStyle(
-  fontSize: 16,
-  fontFamily: 'monospace',
-);
+const TextStyle kLyricsStyle = TextStyle(fontSize: 16, fontFamily: 'monospace');
 
 const double kAlbumArtSize = 100.0;
 

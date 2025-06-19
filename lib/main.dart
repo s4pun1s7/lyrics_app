@@ -46,7 +46,11 @@ class LyricsHomePage extends StatefulWidget {
   final bool isDarkMode;
   final ValueChanged<bool> toggleTheme;
 
-  const LyricsHomePage({super.key, required this.isDarkMode, required this.toggleTheme});
+  const LyricsHomePage({
+    super.key,
+    required this.isDarkMode,
+    required this.toggleTheme,
+  });
 
   @override
   LyricsHomePageState createState() => LyricsHomePageState();
@@ -505,7 +509,9 @@ class LyricsHomePageState extends State<LyricsHomePage> {
         children: [
           // Menu bar above the search area
           Container(
-            color: Theme.of(context).colorScheme.secondary.withAlpha((0.1 * 255).toInt()),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withAlpha((0.1 * 255).toInt()),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
