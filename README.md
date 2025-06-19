@@ -1,16 +1,48 @@
-# lyrics_app
+# Lyrics App 🎶  
+A cross-platform Flutter app designed to help you organize and manage your personal song lyrics with ease.
 
-A new Flutter project.
+## 🚀 Features
+- Add and remove lyrics from your personal song list  
+- Built with Flutter for support across **Android, iOS, Web, macOS, Windows, and Linux**  
+- Lightweight and open-source with GitHub Pages support for deployment
 
-## Getting Started
+## 🛠 Tech Stack
+- **Frontend:** Flutter (Dart)  
+- **Backend/Logic:** Dart  
+- **Other Technologies:**  
+  - C++, CMake (native integrations)  
+  - Swift (iOS support)  
+  - HTML (for web deployment via GitHub Pages)
 
-This project is a starting point for a Flutter application.
+## 📦 Getting Started
 
-A few resources to get you started if this is your first Flutter project:
+To run this project locally:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+# Clone the repo
+git clone https://github.com/s4pun1s7/lyrics_app.git
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Navigate into the project
+cd lyrics_app
+
+# Get dependencies
+flutter pub get
+
+# Run the app (replace with your desired platform)
+flutter run
+```
+
+## 📁 Project Structure
+```
+├── android/        # Android native files
+├── ios/            # iOS native files
+├── lib/            # Main Flutter source code
+├── linux/          # Linux support
+├── macos/          # macOS support
+├── web/            # Web support
+├── windows/        # Windows support
+├── test/           # Unit and widget tests
+```
+
+## 📄 License
+This project is open source. See the [LICENSE](LICENSE) file for details.
