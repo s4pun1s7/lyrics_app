@@ -75,8 +75,9 @@ class SavedPage extends StatelessWidget {
                                     width: 48,
                                     height: 48,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        Icon(Icons.music_note),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Icon(Icons.music_note),
                                   )
                                 : Icon(Icons.music_note),
                             trailing: Row(
@@ -118,8 +119,8 @@ class SavedPage extends StatelessWidget {
           Center(
             child: ElevatedButton(
               onPressed: onBackToSearch,
-              child: Text('Back to Search'),
               style: kButtonStyle,
+              child: Text('Back to Search'),
             ),
           ),
         ],
