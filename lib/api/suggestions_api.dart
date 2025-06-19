@@ -10,7 +10,10 @@ Future<List<String>> fetchSuggestions(String query, String type) async {
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
     final results = List<String>.from(
-      data['results'].map((item) => type == 'musicArtist' ? item['artistName'] : item['trackName']),
+      data['results'].map(
+        (item) =>
+            type == 'musicArtist' ? item['artistName'] : item['trackName'],
+      ),
     );
     // Remove duplicates and sort alphabetically
     final uniqueSorted = results.toSet().toList()..sort();

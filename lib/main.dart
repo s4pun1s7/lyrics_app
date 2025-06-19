@@ -286,7 +286,13 @@ class _LyricsHomePageState extends State<LyricsHomePage> {
       final results = await fetchArtistsBySong(_song);
       setState(() {
         _artistSongResults = results
-            .where((item) => item['artist']!.toLowerCase().contains(_artist.toLowerCase()) || item['song']!.toLowerCase().contains(_song.toLowerCase()))
+            .where(
+              (item) =>
+                  item['artist']!.toLowerCase().contains(
+                    _artist.toLowerCase(),
+                  ) ||
+                  item['song']!.toLowerCase().contains(_song.toLowerCase()),
+            )
             .toList();
         _showArtistSongDropdown = _artistSongResults.isNotEmpty;
       });

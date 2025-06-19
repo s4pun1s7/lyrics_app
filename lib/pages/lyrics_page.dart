@@ -181,28 +181,54 @@ class _LyricsPageState extends State<LyricsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 4.0),
                                 child: InkWell(
-                                  onTap: () => _launchUrl(context, widget.sourceUrl!),
+                                  onTap: () =>
+                                      _launchUrl(context, widget.sourceUrl!),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.link, size: 18, color: Theme.of(context).colorScheme.primary),
+                                      Icon(
+                                        Icons.link,
+                                        size: 18,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
                                       SizedBox(width: 4),
-                                      Text('View on iTunes', style: TextStyle(color: Theme.of(context).colorScheme.primary, decoration: TextDecoration.underline)),
+                                      Text(
+                                        'View on iTunes',
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                               ),
                             if (widget.spotifyUrl != null)
                               InkWell(
-                                onTap: () => _launchUrl(context, widget.spotifyUrl!),
+                                onTap: () =>
+                                    _launchUrl(context, widget.spotifyUrl!),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.music_note, size: 18, color: Colors.green),
+                                    Icon(
+                                      Icons.music_note,
+                                      size: 18,
+                                      color: Colors.green,
+                                    ),
                                     SizedBox(width: 4),
-                                    Text('View on Spotify', style: TextStyle(color: Colors.green, decoration: TextDecoration.underline)),
+                                    Text(
+                                      'View on Spotify',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

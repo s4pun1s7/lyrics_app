@@ -109,12 +109,17 @@ class SearchPage extends StatelessWidget {
                 constraints: BoxConstraints(maxHeight: 200),
                 child: ListView(
                   shrinkWrap: true,
-                  children: artistSongResults.map(
-                    (result) => ListTile(
-                      title: Text('${result['artist']} - ${result['song']}', style: kSuggestionStyle),
-                      onTap: () => onArtistSongDropdownSelect(result),
-                    ),
-                  ).toList(),
+                  children: artistSongResults
+                      .map(
+                        (result) => ListTile(
+                          title: Text(
+                            '${result['artist']} - ${result['song']}',
+                            style: kSuggestionStyle,
+                          ),
+                          onTap: () => onArtistSongDropdownSelect(result),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ),
