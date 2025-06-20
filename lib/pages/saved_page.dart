@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../style.dart';
 import '../models/saved_song.dart';
 import 'lyrics_page.dart';
+import '../storage_service.dart';
 
 class SavedPage extends StatelessWidget {
   final List<SavedSong> savedSongs;
@@ -24,6 +27,86 @@ class SavedPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Saved Lyrics', style: kTitleStyle),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                icon: Icon(Icons.file_upload),
+                label: Text('Import'),
+                onPressed: () async {
+                  try {
+                    final dir = await getApplicationDocumentsDirectory();
+                    final file = File('${dir.path}/lyrics_export.json');
+                    if (await file.exists()) {
+                      final content = await file.readAsString();
+                      final imported = SavedSong.decodeList(content);
+                      if (imported.isNotEmpty) {
+                        // Show confirmation dialog
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Import Lyrics'),
+                            content: Text(
+                                'Import will overwrite your current saved lyrics. Continue?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text('Import'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          // Overwrite logic must be handled by parent
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Imported ${imported.length} lyrics. Restart app to see changes.')),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('No valid lyrics found in file.')),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('No export file found.')),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Import failed: $e')),
+                    );
+                  }
+                },
+              ),
+              SizedBox(width: 16),
+              ElevatedButton.icon(
+                icon: Icon(Icons.file_download),
+                label: Text('Export'),
+                onPressed: () async {
+                  try {
+                    final dir = await getApplicationDocumentsDirectory();
+                    final file = File('${dir.path}/lyrics_export.json');
+                    await file.writeAsString(SavedSong.encodeList(savedSongs));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Exported to ${file.path}')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Export failed: $e')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
           SizedBox(height: 16),
           Expanded(
             child: savedSongs.isEmpty

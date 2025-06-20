@@ -12,8 +12,13 @@ import 'api/album_art_api.dart';
 import 'api/lyrics_api.dart'; // Make sure fetchLyrics is exported from this file.
 import 'models/saved_song.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'storage_service.dart';
 
-void main() => runApp(LyricsApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.init();
+  runApp(const LyricsApp());
+}
 
 class LyricsApp extends StatefulWidget {
   const LyricsApp({super.key});
