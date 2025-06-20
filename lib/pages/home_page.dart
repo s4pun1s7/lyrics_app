@@ -54,6 +54,8 @@ class LyricsHomePageState extends State<LyricsHomePage> {
   bool _isLoadingAuth = false;
   String? _authError;
   double _textAreaWidth = 400.0;
+  bool _isLoadingArtistSuggestions = false;
+  bool _isLoadingSongSuggestions = false;
 
   @override
   void initState() {
@@ -156,17 +158,20 @@ class LyricsHomePageState extends State<LyricsHomePage> {
 
   void _debounceArtistSuggestions(String value) {
     _artistDebounce?.cancel();
+    setState(() => _isLoadingArtistSuggestions = true);
     _artistDebounce = Timer(const Duration(milliseconds: 300), () async {
       final suggestions = await fetchSuggestions(value, 'musicArtist');
       setState(() {
         _artistSuggestions.clear();
         _artistSuggestions.addAll(suggestions);
+        _isLoadingArtistSuggestions = false;
       });
     });
   }
 
   void _debounceSongSuggestions(String value) {
     _songDebounce?.cancel();
+    setState(() => _isLoadingSongSuggestions = true);
     _songDebounce = Timer(const Duration(milliseconds: 300), () async {
       final suggestions = await fetchSuggestions(
         _artistController.text,
@@ -175,6 +180,7 @@ class LyricsHomePageState extends State<LyricsHomePage> {
       setState(() {
         _songSuggestions.clear();
         _songSuggestions.addAll(suggestions);
+        _isLoadingSongSuggestions = false;
       });
     });
   }
@@ -390,6 +396,8 @@ class LyricsHomePageState extends State<LyricsHomePage> {
                       song: _song,
                       artistSuggestions: _artistSuggestions,
                       songSuggestions: _songSuggestions,
+                      isLoadingArtistSuggestions: _isLoadingArtistSuggestions,
+                      isLoadingSongSuggestions: _isLoadingSongSuggestions,
                       onArtistChanged: _onArtistChanged,
                       onSongChanged: _onSongChanged,
                       onArtistSuggestionTap: _onArtistSuggestionTap,

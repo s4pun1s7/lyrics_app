@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../style.dart';
+import '../widgets/suggestions_dropdown.dart';
 
 class SearchPage extends StatelessWidget {
   final bool isDarkMode;
@@ -16,6 +17,8 @@ class SearchPage extends StatelessWidget {
   final VoidCallback onGoToSaves;
   final TextEditingController artistController;
   final TextEditingController songController;
+  final bool isLoadingArtistSuggestions;
+  final bool isLoadingSongSuggestions;
 
   const SearchPage({
     super.key,
@@ -33,6 +36,8 @@ class SearchPage extends StatelessWidget {
     required this.onGoToSaves,
     required this.artistController,
     required this.songController,
+    required this.isLoadingArtistSuggestions,
+    required this.isLoadingSongSuggestions,
   });
 
   @override
@@ -56,11 +61,23 @@ class SearchPage extends StatelessWidget {
                           onChanged: onArtistChanged,
                           controller: artistController,
                         ),
+                        SuggestionsDropdown(
+                          suggestions: artistSuggestions,
+                          onTap: onArtistSuggestionTap,
+                          label: 'Artist Suggestions',
+                          isLoading: isLoadingArtistSuggestions,
+                        ),
                         TextField(
                           decoration: InputDecoration(labelText: 'Song Title'),
                           style: kSuggestionStyle,
                           onChanged: onSongChanged,
                           controller: songController,
+                        ),
+                        SuggestionsDropdown(
+                          suggestions: songSuggestions,
+                          onTap: onSongSuggestionTap,
+                          label: 'Song Suggestions',
+                          isLoading: isLoadingSongSuggestions,
                         ),
                         SizedBox(height: 16),
                         Row(
@@ -82,34 +99,6 @@ class SearchPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  VerticalDivider(width: 32),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (artistSuggestions.isNotEmpty) ...[
-                          Text('Artist Suggestions', style: kTitleStyle),
-                          ...artistSuggestions.map(
-                            (suggestion) => ListTile(
-                              title: Text(suggestion, style: kSuggestionStyle),
-                              onTap: () => onArtistSuggestionTap(suggestion),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                        ],
-                        if (songSuggestions.isNotEmpty) ...[
-                          Text('Song Suggestions', style: kTitleStyle),
-                          ...songSuggestions.map(
-                            (suggestion) => ListTile(
-                              title: Text(suggestion, style: kSuggestionStyle),
-                              onTap: () => onSongSuggestionTap(suggestion),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
                 ],
               ),
             )
@@ -123,32 +112,24 @@ class SearchPage extends StatelessWidget {
                     onChanged: onArtistChanged,
                     controller: artistController,
                   ),
+                  SuggestionsDropdown(
+                    suggestions: artistSuggestions,
+                    onTap: onArtistSuggestionTap,
+                    label: 'Artist Suggestions',
+                    isLoading: isLoadingArtistSuggestions,
+                  ),
                   TextField(
                     decoration: InputDecoration(labelText: 'Song Title'),
                     style: kSuggestionStyle,
                     onChanged: onSongChanged,
                     controller: songController,
                   ),
-                  if (artistSuggestions.isNotEmpty) ...[
-                    SizedBox(height: 8),
-                    Text('Artist Suggestions', style: kTitleStyle),
-                    ...artistSuggestions.map(
-                      (suggestion) => ListTile(
-                        title: Text(suggestion, style: kSuggestionStyle),
-                        onTap: () => onArtistSuggestionTap(suggestion),
-                      ),
-                    ),
-                  ],
-                  if (songSuggestions.isNotEmpty) ...[
-                    SizedBox(height: 8),
-                    Text('Song Suggestions', style: kTitleStyle),
-                    ...songSuggestions.map(
-                      (suggestion) => ListTile(
-                        title: Text(suggestion, style: kSuggestionStyle),
-                        onTap: () => onSongSuggestionTap(suggestion),
-                      ),
-                    ),
-                  ],
+                  SuggestionsDropdown(
+                    suggestions: songSuggestions,
+                    onTap: onSongSuggestionTap,
+                    label: 'Song Suggestions',
+                    isLoading: isLoadingSongSuggestions,
+                  ),
                   SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
