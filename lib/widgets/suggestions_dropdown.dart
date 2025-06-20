@@ -47,7 +47,7 @@ class SuggestionsDropdown extends StatelessWidget {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: suggestions.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final suggestion = suggestions[index];
                 return InkWell(
