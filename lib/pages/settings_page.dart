@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../widgets/settings_preview.dart';
+import '../widgets/settings_controls.dart';
+import '../widgets/about_section.dart';
 
 class SettingsPage extends StatelessWidget {
   final bool isDarkMode;
@@ -11,6 +14,8 @@ class SettingsPage extends StatelessWidget {
   final ValueChanged<double> onLineHeightChanged;
   final TextAlign textAlign;
   final ValueChanged<TextAlign> onTextAlignChanged;
+  final double textAreaWidth;
+  final ValueChanged<double> onTextAreaWidthChanged;
 
   const SettingsPage({
     super.key,
@@ -24,124 +29,126 @@ class SettingsPage extends StatelessWidget {
     required this.onLineHeightChanged,
     required this.textAlign,
     required this.onTextAlignChanged,
+    required this.textAreaWidth,
+    required this.onTextAreaWidthChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width > 700;
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.all(24.0),
-        children: [
-          Text('Interface', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.brightness_6),
-            title: const Text('Theme'),
-            subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
-            trailing: Switch(value: isDarkMode, onChanged: onThemeChanged),
-          ),
-          ListTile(
-            leading: const Icon(Icons.font_download),
-            title: const Text('Font Family'),
-            subtitle: Text(fontFamily),
-            trailing: DropdownButton<String>(
-              value: fontFamily,
-              items: const [
-                DropdownMenuItem(value: 'monospace', child: Text('Monospace')),
-                DropdownMenuItem(value: 'serif', child: Text('Serif')),
-                DropdownMenuItem(
-                  value: 'sans-serif',
-                  child: Text('Sans-serif'),
+      appBar: isWide ? null : AppBar(title: const Text('Settings')),
+      body: isWide
+          ? Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: ListView(
+                    padding: const EdgeInsets.all(24.0),
+                    children: [
+                      SettingsControls(
+                        isDarkMode: isDarkMode,
+                        onThemeChanged: onThemeChanged,
+                        fontFamily: fontFamily,
+                        fontSize: fontSize,
+                        lineHeight: lineHeight,
+                        onFontFamilyChanged: onFontFamilyChanged,
+                        onFontSizeChanged: onFontSizeChanged,
+                        onLineHeightChanged: onLineHeightChanged,
+                        textAlign: textAlign,
+                        onTextAlignChanged: onTextAlignChanged,
+                        textAreaWidth: textAreaWidth,
+                        onTextAreaWidthChanged: onTextAreaWidthChanged,
+                        onResetDefaults: () => _resetDefaults(context),
+                      ),
+                      const SizedBox(height: 32),
+                      AboutSection(
+                        onLaunchUrl: (url) => _launchUrl(context, url),
+                      ),
+                    ],
+                  ),
                 ),
-                DropdownMenuItem(value: 'Roboto', child: Text('Roboto')),
-              ],
-              onChanged: (val) {
-                if (val != null) onFontFamilyChanged(val);
-              },
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.format_size),
-            title: const Text('Font Size'),
-            subtitle: Text(fontSize.toStringAsFixed(1)),
-            trailing: SizedBox(
-              width: 150,
-              child: Slider(
-                min: 12,
-                max: 32,
-                divisions: 20,
-                value: fontSize,
-                label: fontSize.toStringAsFixed(1),
-                onChanged: onFontSizeChanged,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.format_line_spacing),
-            title: const Text('Line Height'),
-            subtitle: Text(lineHeight.toStringAsFixed(2)),
-            trailing: SizedBox(
-              width: 150,
-              child: Slider(
-                min: 1.0,
-                max: 2.5,
-                divisions: 15,
-                value: lineHeight,
-                label: lineHeight.toStringAsFixed(2),
-                onChanged: onLineHeightChanged,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.format_align_left),
-            title: const Text('Text Alignment'),
-            subtitle: Text(
-              textAlign == TextAlign.left
-                  ? 'Left'
-                  : textAlign == TextAlign.center
-                  ? 'Center'
-                  : textAlign == TextAlign.right
-                  ? 'Right'
-                  : 'Justify',
-            ),
-            trailing: DropdownButton<TextAlign>(
-              value: textAlign,
-              items: const [
-                DropdownMenuItem(value: TextAlign.left, child: Text('Left')),
-                DropdownMenuItem(
-                  value: TextAlign.center,
-                  child: Text('Center'),
-                ),
-                DropdownMenuItem(value: TextAlign.right, child: Text('Right')),
-                DropdownMenuItem(
-                  value: TextAlign.justify,
-                  child: Text('Justify'),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  flex: 1,
+                  child: SingleChildScrollView(
+                    child: SettingsPreview(
+                      fontFamily: fontFamily,
+                      fontSize: fontSize,
+                      lineHeight: lineHeight,
+                      textAlign: textAlign,
+                      textAreaWidth: textAreaWidth,
+                    ),
+                  ),
                 ),
               ],
-              onChanged: (val) {
-                if (val != null) onTextAlignChanged(val);
-              },
+            )
+          : ListView(
+              padding: const EdgeInsets.all(24.0),
+              children: [
+                SettingsControls(
+                  isDarkMode: isDarkMode,
+                  onThemeChanged: onThemeChanged,
+                  fontFamily: fontFamily,
+                  fontSize: fontSize,
+                  lineHeight: lineHeight,
+                  onFontFamilyChanged: onFontFamilyChanged,
+                  onFontSizeChanged: onFontSizeChanged,
+                  onLineHeightChanged: onLineHeightChanged,
+                  textAlign: textAlign,
+                  onTextAlignChanged: onTextAlignChanged,
+                  textAreaWidth: textAreaWidth,
+                  onTextAreaWidthChanged: onTextAreaWidthChanged,
+                  onResetDefaults: () => _resetDefaults(context),
+                ),
+                const SizedBox(height: 24),
+                SettingsPreview(
+                  fontFamily: fontFamily,
+                  fontSize: fontSize,
+                  lineHeight: lineHeight,
+                  textAlign: textAlign,
+                  textAreaWidth: textAreaWidth,
+                ),
+                const SizedBox(height: 32),
+                AboutSection(onLaunchUrl: (url) => _launchUrl(context, url)),
+              ],
             ),
+    );
+  }
+
+  void _launchUrl(BuildContext context, String url) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Open Link'),
+        content: Text('Open this link in your browser?\n\n$url'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          const Divider(height: 32),
-          Text('About', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('Lyrics Finder'),
-            subtitle: const Text(
-              'Version 0.0.1\nA simple app to search, save, and view song lyrics.\nDeveloped with Flutter.',
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.code),
-            title: const Text('Source Code'),
-            subtitle: const Text('github.com/s4pun1s7/lyrics_app'),
-            onTap: null, // Placeholder for future link
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // For web, just use launchUrlString if available, else copy to clipboard
+              // For now, use canLaunchUrlString and launchUrlString if url_launcher is added
+            },
+            child: const Text('Open'),
           ),
         ],
       ),
+    );
+  }
+
+  void _resetDefaults(BuildContext context) {
+    onThemeChanged(false);
+    onFontFamilyChanged('monospace');
+    onFontSizeChanged(16.0);
+    onLineHeightChanged(1.2);
+    onTextAlignChanged(TextAlign.left);
+    onTextAreaWidthChanged(400.0);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Settings reset to defaults.')),
     );
   }
 }

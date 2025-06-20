@@ -1,16 +1,16 @@
-import 'dart:convert';
-
 class SavedSong {
   final String artist;
   final String song;
   final String lyrics;
   final String? albumArtUrl;
+  final String? firebaseId;
 
   SavedSong({
     required this.artist,
     required this.song,
     required this.lyrics,
     this.albumArtUrl,
+    this.firebaseId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -25,13 +25,6 @@ class SavedSong {
     song: json['song'],
     lyrics: json['lyrics'],
     albumArtUrl: json['albumArtUrl'],
+    firebaseId: json['firebaseId'],
   );
-
-  static String encodeList(List<SavedSong> songs) =>
-      json.encode(songs.map((s) => s.toJson()).toList());
-
-  static List<SavedSong> decodeList(String songs) =>
-      (json.decode(songs) as List<dynamic>)
-          .map((item) => SavedSong.fromJson(item))
-          .toList();
 }

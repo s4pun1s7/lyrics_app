@@ -17,11 +17,6 @@ class SearchPage extends StatelessWidget {
   final TextEditingController artistController;
   final TextEditingController songController;
 
-  // If you want to support artist-song dropdowns, add these parameters:
-  final List<Map<String, String>> artistSongResults;
-  final bool showArtistSongDropdown;
-  final ValueChanged<Map<String, String>> onArtistSongDropdownSelect;
-
   const SearchPage({
     super.key,
     required this.isDarkMode,
@@ -38,110 +33,142 @@ class SearchPage extends StatelessWidget {
     required this.onGoToSaves,
     required this.artistController,
     required this.songController,
-    this.artistSongResults = const [],
-    this.showArtistSongDropdown = false,
-    required this.onArtistSongDropdownSelect,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width > 700;
     return Padding(
       padding: kPagePadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            decoration: InputDecoration(labelText: 'Artist'),
-            style: kSuggestionStyle,
-            onChanged: onArtistChanged,
-            controller: artistController,
-          ),
-          if (artistSuggestions.isNotEmpty)
-            Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: 200),
-                child: ListView(
-                  shrinkWrap: true,
-                  children: artistSuggestions
-                      .map(
-                        (suggestion) => ListTile(
-                          title: Text(suggestion, style: kSuggestionStyle),
-                          onTap: () => onArtistSuggestionTap(suggestion),
+      child: isWide
+          ? SingleChildScrollView(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          decoration: InputDecoration(labelText: 'Artist'),
+                          style: kSuggestionStyle,
+                          onChanged: onArtistChanged,
+                          controller: artistController,
                         ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
-          TextField(
-            decoration: InputDecoration(labelText: 'Song Title'),
-            style: kSuggestionStyle,
-            onChanged: onSongChanged,
-            controller: songController,
-          ),
-          if (songSuggestions.isNotEmpty)
-            Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: 200),
-                child: ListView(
-                  shrinkWrap: true,
-                  children: songSuggestions
-                      .map(
-                        (suggestion) => ListTile(
-                          title: Text(suggestion, style: kSuggestionStyle),
-                          onTap: () => onSongSuggestionTap(suggestion),
+                        TextField(
+                          decoration: InputDecoration(labelText: 'Song Title'),
+                          style: kSuggestionStyle,
+                          onChanged: onSongChanged,
+                          controller: songController,
                         ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
-          // If you want to show the artist-song dropdown:
-          if (showArtistSongDropdown && artistSongResults.isNotEmpty)
-            Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: 200),
-                child: ListView(
-                  shrinkWrap: true,
-                  children: artistSongResults
-                      .map(
-                        (result) => ListTile(
-                          title: Text(
-                            '${result['artist']} - ${result['song']}',
-                            style: kSuggestionStyle,
+                        SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              style: kButtonStyle,
+                              onPressed: onSearch,
+                              child: Text('Search Lyrics'),
+                            ),
+                            SizedBox(width: 16),
+                            ElevatedButton(
+                              style: kButtonStyle,
+                              onPressed: onGoToSaves,
+                              child: Text('Saved'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  VerticalDivider(width: 32),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (artistSuggestions.isNotEmpty) ...[
+                          Text('Artist Suggestions', style: kTitleStyle),
+                          ...artistSuggestions.map(
+                            (suggestion) => ListTile(
+                              title: Text(suggestion, style: kSuggestionStyle),
+                              onTap: () => onArtistSuggestionTap(suggestion),
+                            ),
                           ),
-                          onTap: () => onArtistSongDropdownSelect(result),
-                        ),
-                      )
-                      .toList(),
-                ),
+                          SizedBox(height: 16),
+                        ],
+                        if (songSuggestions.isNotEmpty) ...[
+                          Text('Song Suggestions', style: kTitleStyle),
+                          ...songSuggestions.map(
+                            (suggestion) => ListTile(
+                              title: Text(suggestion, style: kSuggestionStyle),
+                              onTap: () => onSongSuggestionTap(suggestion),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(labelText: 'Artist'),
+                    style: kSuggestionStyle,
+                    onChanged: onArtistChanged,
+                    controller: artistController,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(labelText: 'Song Title'),
+                    style: kSuggestionStyle,
+                    onChanged: onSongChanged,
+                    controller: songController,
+                  ),
+                  if (artistSuggestions.isNotEmpty) ...[
+                    SizedBox(height: 8),
+                    Text('Artist Suggestions', style: kTitleStyle),
+                    ...artistSuggestions.map(
+                      (suggestion) => ListTile(
+                        title: Text(suggestion, style: kSuggestionStyle),
+                        onTap: () => onArtistSuggestionTap(suggestion),
+                      ),
+                    ),
+                  ],
+                  if (songSuggestions.isNotEmpty) ...[
+                    SizedBox(height: 8),
+                    Text('Song Suggestions', style: kTitleStyle),
+                    ...songSuggestions.map(
+                      (suggestion) => ListTile(
+                        title: Text(suggestion, style: kSuggestionStyle),
+                        onTap: () => onSongSuggestionTap(suggestion),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        style: kButtonStyle,
+                        onPressed: onSearch,
+                        child: Text('Search Lyrics'),
+                      ),
+                      SizedBox(width: 16),
+                      ElevatedButton(
+                        style: kButtonStyle,
+                        onPressed: onGoToSaves,
+                        child: Text('Saved'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                style: kButtonStyle,
-                onPressed: onSearch,
-                child: Text('Search Lyrics'),
-              ),
-              SizedBox(width: 16),
-              ElevatedButton(
-                style: kButtonStyle,
-                onPressed: onGoToSaves,
-                child: Text('Saved'),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

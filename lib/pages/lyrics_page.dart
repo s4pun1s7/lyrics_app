@@ -16,6 +16,7 @@ class LyricsPage extends StatefulWidget {
   final TextAlign textAlign;
   final String? sourceUrl;
   final String? spotifyUrl;
+  final double textAreaWidth;
 
   const LyricsPage({
     super.key,
@@ -32,6 +33,7 @@ class LyricsPage extends StatefulWidget {
     this.textAlign = TextAlign.left,
     this.sourceUrl,
     this.spotifyUrl,
+    required this.textAreaWidth,
   });
 
   @override
@@ -123,20 +125,170 @@ class _LyricsPageState extends State<LyricsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width > 700;
     return Padding(
       padding: kPagePadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left: Lyrics (centered)
-                Expanded(
-                  flex: 2,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
+      child: isWide
+          ? SingleChildScrollView(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: widget.textAreaWidth,
+                        ),
+                        child: SelectableText(
+                          widget.lyrics,
+                          style: TextStyle(
+                            fontSize: widget.fontSize,
+                            fontFamily: widget.fontFamily,
+                            height: widget.lineHeight,
+                          ),
+                          textAlign: widget.textAlign,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 32),
+                  SizedBox(
+                    width: 260,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (widget.albumArtUrl != null)
+                            SizedBox(
+                              width: kAlbumArtSize,
+                              height: kAlbumArtSize,
+                              child: Image.network(
+                                widget.albumArtUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(Icons.music_note, size: 60),
+                              ),
+                            ),
+                          SizedBox(height: 16),
+                          Text(
+                            '${widget.artist} - ${widget.song}',
+                            style: kTitleStyle,
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          if (widget.sourceUrl != null ||
+                              widget.spotifyUrl != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                if (widget.sourceUrl != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4.0),
+                                    child: InkWell(
+                                      onTap: () => _launchUrl(
+                                        context,
+                                        widget.sourceUrl!,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.link,
+                                            size: 18,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'View on iTunes',
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                if (widget.spotifyUrl != null)
+                                  InkWell(
+                                    onTap: () =>
+                                        _launchUrl(context, widget.spotifyUrl!),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.music_note,
+                                          size: 18,
+                                          color: Colors.green,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'View on Spotify',
+                                          style: TextStyle(
+                                            color: Colors.green,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: widget.isSaved
+                                    ? widget.onUnsave
+                                    : widget.onSave,
+                                style: kButtonStyle,
+                                child: Text(widget.isSaved ? 'Unsave' : 'Save'),
+                              ),
+                              SizedBox(width: 8),
+                              OutlinedButton(
+                                onPressed: _isAutoScrolling
+                                    ? _stopAutoScroll
+                                    : _startAutoScroll,
+                                style: null,
+                                child: Icon(
+                                  _isAutoScrolling
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              OutlinedButton(
+                                onPressed: _showScrollSettings,
+                                style: null,
+                                child: Icon(Icons.speed),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: widget.textAreaWidth),
                     child: SelectableText(
                       widget.lyrics,
                       style: TextStyle(
@@ -147,130 +299,122 @@ class _LyricsPageState extends State<LyricsPage> {
                       textAlign: widget.textAlign,
                     ),
                   ),
-                ),
-                SizedBox(width: 32),
-                // Right: Metadata and controls
-                SizedBox(
-                  width: 260,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (widget.albumArtUrl != null)
-                        SizedBox(
-                          width: kAlbumArtSize,
-                          height: kAlbumArtSize,
-                          child: Image.network(
-                            widget.albumArtUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.music_note, size: 60),
-                          ),
+                  const SizedBox(height: 24),
+                  if (widget.albumArtUrl != null)
+                    Center(
+                      child: SizedBox(
+                        width: kAlbumArtSize,
+                        height: kAlbumArtSize,
+                        child: Image.network(
+                          widget.albumArtUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.music_note, size: 60),
                         ),
-                      SizedBox(height: 16),
-                      Text(
-                        '${widget.artist} - ${widget.song}',
-                        style: kTitleStyle,
-                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 8),
-                      if (widget.sourceUrl != null || widget.spotifyUrl != null)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            if (widget.sourceUrl != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 4.0),
-                                child: InkWell(
-                                  onTap: () =>
-                                      _launchUrl(context, widget.sourceUrl!),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.link,
-                                        size: 18,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'View on iTunes',
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ],
+                    ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      '${widget.artist} - ${widget.song}',
+                      style: kTitleStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  if (widget.sourceUrl != null || widget.spotifyUrl != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (widget.sourceUrl != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: InkWell(
+                              onTap: () =>
+                                  _launchUrl(context, widget.sourceUrl!),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.link,
+                                    size: 18,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
-                                ),
-                              ),
-                            if (widget.spotifyUrl != null)
-                              InkWell(
-                                onTap: () =>
-                                    _launchUrl(context, widget.spotifyUrl!),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.music_note,
-                                      size: 18,
-                                      color: Colors.green,
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'View on iTunes',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      decoration: TextDecoration.underline,
                                     ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'View on Spotify',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                          ],
-                        ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            onPressed: widget.isSaved
-                                ? widget.onUnsave
-                                : widget.onSave,
-                            style: kButtonStyle,
-                            child: Text(widget.isSaved ? 'Unsave' : 'Save'),
-                          ),
-                          SizedBox(width: 8),
-                          OutlinedButton(
-                            onPressed: _isAutoScrolling
-                                ? _stopAutoScroll
-                                : _startAutoScroll,
-                            style: null,
-                            child: Icon(
-                              _isAutoScrolling ? Icons.pause : Icons.play_arrow,
                             ),
                           ),
-                          SizedBox(width: 8),
-                          OutlinedButton(
-                            onPressed: _showScrollSettings,
-                            style: null,
-                            child: Icon(Icons.speed),
+                        if (widget.spotifyUrl != null)
+                          InkWell(
+                            onTap: () =>
+                                _launchUrl(context, widget.spotifyUrl!),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.music_note,
+                                  size: 18,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'View on Spotify',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                      ],
+                    ),
+                  SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: widget.isSaved
+                            ? widget.onUnsave
+                            : widget.onSave,
+                        style: kButtonStyle,
+                        child: Text(widget.isSaved ? 'Unsave' : 'Save'),
+                      ),
+                      SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: _isAutoScrolling
+                            ? _stopAutoScroll
+                            : _startAutoScroll,
+                        style: null,
+                        child: Icon(
+                          _isAutoScrolling ? Icons.pause : Icons.play_arrow,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: _showScrollSettings,
+                        style: null,
+                        child: Icon(Icons.speed),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
     );
   }
 
