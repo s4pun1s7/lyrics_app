@@ -28,7 +28,7 @@ jobs:
         run: dart format . --set-exit-if-changed
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --release --base-href /lyrics_app/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
